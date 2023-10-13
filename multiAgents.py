@@ -152,6 +152,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+        gameState.getLegalActions(agentIndex)
+        gameState.generateSuccessor(agentIndex, action)
+        gameState.getNumAgents()
+        gameState.isWin()
+        gameState.isLose()
+        
         util.raiseNotDefined()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -164,6 +170,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        gameState.getLegalActions(agentIndex)
+        gameState.generateSuccessor(agentIndex, action)
+        gameState.getNumAgents()
+        gameState.isWin()
+        gameState.isLose()
         util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
@@ -179,6 +190,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
+        gameState.getLegalActions(agentIndex)
+        gameState.generateSuccessor(agentIndex, action)
+        gameState.getNumAgents()
+        gameState.isWin()
+        gameState.isLose()
+
         util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):
@@ -189,6 +206,12 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
+    currentGameState.getLegalActions()
+    currentGameState.generateSuccessor()
+    currentGameState.getNumAgents()
+    currentGameState.isWin()
+    currentGameState.isLose()
+    
     util.raiseNotDefined()
 
 # Abbreviation
