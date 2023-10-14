@@ -82,12 +82,10 @@ class ReflexAgent(Agent):
 
         foodList = newFood.asList()
         foodDistance = [manhattanDistance(newPos, food) for food in foodList]
-        foodScore = 0
         if foodDistance:
             foodScore = 1.0 / min(foodDistance)
         
         ghostDistance = [manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates]
-        ghostScore = 0
         if ghostDistance:
             ghostScore = 1.0 / min(ghostDistance)
 
@@ -152,13 +150,38 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        gameState.getLegalActions(agentIndex)
-        gameState.generateSuccessor(agentIndex, action)
-        gameState.getNumAgents()
-        gameState.isWin()
-        gameState.isLose()
+        def minValue(state, agentIndex, depth):
+            agentCount = state.getNumAgents()
+            actions = state.getLegalActions(agentIndex)
+
+            if not actions:
+                return self.evaluationFunction(state)
+            
+            if agentIndex == agentCount - 1: 
+                minDepth = min(maxValue(state.generateSuccessor(agentIndex, action), agentIndex, depth) for action in actions)
+            else:
+                minDepth = min(minValue(state.generateSuccessor(agentIndex, action), agentIndex + 1, depth) for action in actions)
+            
+            return minDepth
         
-        util.raiseNotDefined()
+        def maxValue(state, agentIndex, depth):
+            agentIndex = 0
+            actions = state.getLegalActions(agentIndex)
+
+            if not actions or depth == self.depth:
+                return self.evaluationFunction(state)
+            
+            maxDepth = max(minValue(state.generateSuccessor(agentIndex, action), agentIndex + 1, depth + 1) for action in actions)
+
+            return maxDepth
+        
+        actions = gameState.getLegalActions(0)
+        scores = [minValue(gameState.generateSuccessor(0, action), 1, 1) for action in actions]
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+
+        return actions[random.choice(bestIndices)]
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
