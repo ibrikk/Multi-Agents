@@ -150,6 +150,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+        # Function: minValue
+        # Purpose: Find the minimum utility value across possible actions for a ghost, considering Alpha-Beta pruning
+        # Parameters:
+        # - state: The current game state
+        # - agentIndex: The index of the agent (ghost) being considered
+        # - depth: The current depth in the game tree
+        # - alpha: The current best value achievable for Pacman
+        # - beta: The current best value achievable for the ghosts
         def minValue(state, agentIndex, depth):
             agentCount = state.getNumAgents()
             actions = state.getLegalActions(agentIndex)
@@ -197,26 +205,43 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             agentCount = state.getNumAgents()
             actions = state.getLegalActions(agentIndex)
 
+            # Base case: If there are no legal actions or the state is a terminal state,
+            # evaluate the state using the evaluation function
             if not actions:
                 return self.evaluationFunction(state)
             
-            minDepth = float("inf") #9999
+            minDepth = float("inf")
             currentBeta = beta
 
+            # If the current agent is the last ghost, compare with maxValue for next depth and Pacman
             if agentIndex == agentCount - 1: 
                 for action in actions:
+                    # Update minDepth considering the max value for Pacman at the next depth and applying Alpha-Beta pruning
                     minDepth = min(minDepth, maxValue(state.generateSuccessor(agentIndex, action), agentIndex, depth, alpha, currentBeta))
+                    # Alpha-Beta pruning: If minDepth is less than alpha, return minDepth since we found a worse (for Pacman) value
                     if minDepth < alpha:
                         return minDepth
                     currentBeta = min(currentBeta, minDepth)
             else:
+                # Compare with minValue of the next ghost at the same depth
                 for action in actions:
-                    minDepth = min(minDepth, minValue(state.generateSuccessor(agentIndex, action), agentIndex + 1, depth, alpha, currentBeta))
+                    # Update minDepth considering the min value for the next ghost and applying Alpha-Beta pruning
+                    minDepth = min(minDepth, minValue(state.generateSuccessor
+                    (agentIndex, action), agentIndex + 1, depth, alpha, currentBeta))
+                    # Alpha-Beta pruning: If minDepth is less than alpha, return minDepth since we found a worse (for Pacman) value
                     if minDepth < alpha:
                         return minDepth
                     currentBeta = min(currentBeta, minDepth)
             return minDepth
         
+        # Function: maxValue
+        # Purpose: Find the maximum utility value across possible actions for Pacman, considering Alpha-Beta pruning
+        # Parameters:
+        # - state: The current game state
+        # - agentIndex: The index of the agent (Pacman) being considered
+        # - depth: The current depth in the game tree
+        # - alpha: The current best value achievable for Pacman
+        # - beta: The current best value achievable for the ghosts
         def maxValue(state, agentIndex, depth, alpha, beta):
             agentIndex = 0
             actions = state.getLegalActions(agentIndex)
@@ -248,7 +273,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
-      Your expectimax agent (question 4)
+    Your expectimax agent (question 4)
     """
 
     def getAction(self, gameState):
@@ -263,9 +288,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             agentCount = state.getNumAgents()
             actions = state.getLegalActions(agentIndex)
 
+            # Base case: If there are no legal actions or the state is a terminal state,
+            # evaluate the state using the evaluation function
             if not actions:
                 return self.evaluationFunction(state)
             
+            # If the current agent is the last ghost, calculate the expected utility of its actions
+            # considering the next move of Pacman (max agent), otherwise, consider the next ghost.
             if agentIndex == agentCount - 1: 
                 expectDepth = sum(maxValue(state.generateSuccessor(agentIndex, action), agentIndex, depth) for action in actions) / len(actions)
             else:
@@ -273,10 +302,18 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             
             return expectDepth
         
+        # Function: maxValue
+        # Purpose: Compute the max utility of all possible actions for Pacman (max agent)
+        # Parameters:
+        # - state: The current game state
+        # - agentIndex: The index of the agent (Pacman) being considered
+        # - depth: The current depth in the game tree
         def maxValue(state, agentIndex, depth):
             agentIndex = 0
             actions = state.getLegalActions(agentIndex)
 
+            # Base case: If there are no legal actions or the search has reached its depth limit,
+            # evaluate the state using the evaluation function
             if not actions or depth == self.depth:
                 return self.evaluationFunction(state)
             
@@ -286,6 +323,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         
         actions = gameState.getLegalActions(0)
 
+        # For each possible action, calculate the expected utility of resulting states considering
+        # the next agent (ghost) and the next depth level, then select the action that maximizes 
+        # the expected utility for Pacman
         scores = [expectValue(gameState.generateSuccessor(0, action), 1, 1) for action in actions]
         return actions[scores.index(max(scores))]
 
@@ -304,35 +344,49 @@ def betterEvaluationFunction(currentGameState):
     currentScaredTimes = [ghostState.scaredTimer for ghostState in currentGhostStates]
     currentCapsules = currentGameState.getCapsules()
 
+    # Check if the current game state is a win and return positive infinity if true
     if currentGameState.isWin():
         return float("inf")
+    # Check if the current game state is a loss and return negative infinity if true
     if currentGameState.isLose():
         return float("-inf")
     
+    # Loop through each ghost state to check if Pacman's current position is equal to a ghost's position
+    # If it is, return negative infinity indicating a very bad state
     for state in currentGhostStates:
         if currentPos == state.getPosition():
             return float("-inf")
     
     score = currentGameState.getScore()
-
+    # Calculate the Manhattan distances from Pacman to all food pellets and compute foodScore
+    # The foodScore is the reciprocal of the smallest (closest) distance
     foodDistance = [manhattanDistance(currentPos, food) for food in currentFood.asList()]
     if foodDistance:
         foodScore = 1.0 / min(foodDistance)
     else:
         foodScore = 0
     
+    # Calculate the Manhattan distances from Pacman to all ghosts and compute ghostScore
+    # The ghostScore is the reciprocal of the smallest (closest) distance
     ghostDistance = [manhattanDistance(currentPos, ghost.getPosition()) for ghost in currentGhostStates]
     if ghostDistance:
         ghostScore = 1.0 / min(ghostDistance)
     else:
         ghostScore = 0
     
+    # Calculate the Manhattan distances from Pacman to all capsules and compute capsuleScore
+    # The capsuleScore is the reciprocal of the smallest (closest) distance
     capsuleDistance = [manhattanDistance(currentPos, capsule) for capsule in currentCapsules]
     if capsuleDistance:
         capsuleScore = 1.0 / min(capsuleDistance)
     else:
         capsuleScore = 0
     
+    # Return the overall evaluation score which is a combination of:
+    # - the current game state score
+    # - a score based on proximity to the closest food pellet (foodScore)
+    # - a score (negative impact) based on proximity to the closest ghost (ghostScore)
+    # - a score based on proximity to the closest capsule (capsuleScore)
     return score + foodScore - ghostScore + capsuleScore
 
 # Abbreviation
